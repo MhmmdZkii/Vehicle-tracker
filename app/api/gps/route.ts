@@ -1,12 +1,21 @@
 let latestCoords = { lat: 0, lon: 0, timestamp: Date.now() };
 
-export async function GET() {
-  return Response.json(latestCoords);
-}
+export async function GET(req: Request) {
 
-export async function POST(req: Request) {
-  const body = await req.json();
-  latestCoords = { lat: body.lat, lon: body.lon, timestamp: Date.now() };
-  console.log("Data diterima:", latestCoords); 
-  return Response.json({ message: "Saved!", latestCoords });
+  const { searchParams } = new URL(req.url);
+
+  const lat = searchParams.get("lat");
+  const lon = searchParams.get("lon");
+
+  if (lat && lon) {
+    latestCoords = {
+      lat: Number(lat),
+      lon: Number(lon),
+      timestamp: Date.now()
+    };
+
+    console.log("Data diterima dari tracker:", latestCoords);
+  }
+
+  return Response.json(latestCoords);
 }
