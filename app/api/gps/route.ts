@@ -1,21 +1,26 @@
+import mqtt from 'mqtt';
+
 let latestCoords = { lat: 0, lon: 0, timestamp: Date.now() };
 
-export async function GET(req: Request) {
+const brokerUrl = 'mqtt://mosquitto-abc123.up.railway.app:1883';  // GANTI
+const client = mqtt.connect(brokerUrl);
 
-  const { searchParams } = new URL(req.url);
+client.on('connect', () => {
+  console.log('MQTT connected');
+  client.subscribe('gps/tracker');
+});
 
-  const lat = searchParams.get("lat");
-  const lon = searchParams.get("lon");
-
-  if (lat && lon) {
-    latestCoords = {
-      lat: Number(lat),
-      lon: Number(lon),
-      timestamp: Date.now()
-    };
-
-    console.log("Data diterima dari tracker:", latestCoords);
+client.on('message', (topic, message) => {
+  try {
+    const data = JSON.parse(message.toString());
+    latestCoords = { ...data, timestamp: Date.now() };
+    console.log('GPS update:', latestCoords);
+  } catch (e) {
+    console.error('Invalid MQTT data:', e);
   }
+});
 
+// API GET untuk frontend ambil data terbaru
+export async function GET() {
   return Response.json(latestCoords);
 }
